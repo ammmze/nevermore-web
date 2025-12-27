@@ -111,11 +111,12 @@
 
 <style>
 	.device-card {
-		border: 1px solid #ccc;
+		border: 1px solid var(--border-color, #ccc);
 		border-radius: 8px;
 		padding: 1rem;
 		margin: 1rem 0;
-		background: #fff;
+		background: var(--card-bg, #fff);
+		color: var(--text-color, #333);
 	}
 
 	.device-header {
@@ -128,6 +129,7 @@
 	.device-header h2 {
 		margin: 0;
 		font-size: 1.5rem;
+		color: var(--text-color, #333);
 	}
 
 	.status {
@@ -137,18 +139,18 @@
 	}
 
 	.status.connected {
-		color: #0a0;
-		background: #dfd;
+		color: var(--success-color, #0a0);
+		background: var(--success-bg, #dfd);
 	}
 
 	.status.disconnected {
-		color: #888;
-		background: #f0f0f0;
+		color: var(--text-muted, #888);
+		background: var(--hover-bg, #f0f0f0);
 	}
 
 	.error {
-		color: #c00;
-		background: #fdd;
+		color: var(--error-color, #c00);
+		background: var(--error-bg, #fdd);
 		padding: 0.5rem;
 		border-radius: 4px;
 		margin-bottom: 1rem;
@@ -157,6 +159,7 @@
 	.sensors h3 {
 		margin-top: 0;
 		font-size: 1.2rem;
+		color: var(--text-color, #333);
 	}
 
 	.sensor-grid {
@@ -170,25 +173,29 @@
 		display: flex;
 		flex-direction: column;
 		padding: 0.75rem;
-		background: #f8f8f8;
+		background: var(--sensor-bg, #f8f8f8);
 		border-radius: 4px;
 	}
 
 	.sensor-reading .label {
 		font-size: 0.85rem;
-		color: #666;
+		color: var(--text-muted, #666);
 		margin-bottom: 0.25rem;
 	}
 
 	.sensor-reading .value {
 		font-size: 1.5rem;
 		font-weight: 600;
-		color: #333;
+		color: var(--text-color, #333);
 	}
 
 	.last-update {
 		font-size: 0.85rem;
-		color: #888;
+		color: var(--text-muted, #888);
 		font-style: italic;
+	}
+
+	.sensors p {
+		color: var(--text-muted, #666);
 	}
 </style>
