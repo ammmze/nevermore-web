@@ -4,6 +4,10 @@
     import { Fan } from '$lib/bluetooth/services/Fan.svelte';
     import { Servo } from '$lib/bluetooth/services/Servo.svelte';
     import { SERVICES, NEVERMORE_SERVICES, toUuidString } from '$lib/bluetooth/constants/uuids';
+    import SensorReading from './SensorReading.svelte';
+    import SensorGroup from './SensorGroup.svelte';
+    import SliderControl from './SliderControl.svelte';
+    import ServoCalibration from './ServoCalibration.svelte';
 
     let { device, ondisconnect }: { device: DeviceConnection; ondisconnect: () => void } = $props();
 
@@ -206,58 +210,55 @@
                 {@const data = environmental.aggregate.value}
 
                 <div class="sensor-groups">
-                    <div class="sensor-group">
-                        <h4>Intake</h4>
-                        <div class="sensor-grid">
-                            {#if data.temperatureIntake !== null}
-                                <div class="sensor-reading">
-                                    <span class="label">Temperature</span>
-                                    <span class="value">{data.temperatureIntake.toFixed(1)}°C</span>
-                                </div>
-                            {/if}
+                    <SensorGroup label="Intake">
+                        {#if data.temperatureIntake !== null}
+                            <SensorReading
+                                label="Temperature"
+                                value={data.temperatureIntake.toFixed(1)}
+                                unit="°C"
+                            />
+                        {/if}
 
-                            {#if data.humidityIntake !== null}
-                                <div class="sensor-reading">
-                                    <span class="label">Humidity</span>
-                                    <span class="value">{data.humidityIntake.toFixed(1)}%</span>
-                                </div>
-                            {/if}
+                        {#if data.humidityIntake !== null}
+                            <SensorReading
+                                label="Humidity"
+                                value={data.humidityIntake.toFixed(1)}
+                                unit="%"
+                            />
+                        {/if}
 
-                            {#if data.vocIndexIntake !== null}
-                                <div class="sensor-reading">
-                                    <span class="label">VOC Index</span>
-                                    <span class="value">{data.vocIndexIntake}</span>
-                                </div>
-                            {/if}
-                        </div>
-                    </div>
+                        {#if data.vocIndexIntake !== null}
+                            <SensorReading
+                                label="VOC Index"
+                                value={data.vocIndexIntake.toString()}
+                            />
+                        {/if}
+                    </SensorGroup>
 
-                    <div class="sensor-group">
-                        <h4>Exhaust</h4>
-                        <div class="sensor-grid">
-                            {#if data.temperatureExhaust !== null}
-                                <div class="sensor-reading">
-                                    <span class="label">Temperature</span>
-                                    <span class="value">{data.temperatureExhaust.toFixed(1)}°C</span
-                                    >
-                                </div>
-                            {/if}
+                    <SensorGroup label="Exhaust">
+                        {#if data.temperatureExhaust !== null}
+                            <SensorReading
+                                label="Temperature"
+                                value={data.temperatureExhaust.toFixed(1)}
+                                unit="°C"
+                            />
+                        {/if}
 
-                            {#if data.humidityExhaust !== null}
-                                <div class="sensor-reading">
-                                    <span class="label">Humidity</span>
-                                    <span class="value">{data.humidityExhaust.toFixed(1)}%</span>
-                                </div>
-                            {/if}
+                        {#if data.humidityExhaust !== null}
+                            <SensorReading
+                                label="Humidity"
+                                value={data.humidityExhaust.toFixed(1)}
+                                unit="%"
+                            />
+                        {/if}
 
-                            {#if data.vocIndexExhaust !== null}
-                                <div class="sensor-reading">
-                                    <span class="label">VOC Index</span>
-                                    <span class="value">{data.vocIndexExhaust}</span>
-                                </div>
-                            {/if}
-                        </div>
-                    </div>
+                        {#if data.vocIndexExhaust !== null}
+                            <SensorReading
+                                label="VOC Index"
+                                value={data.vocIndexExhaust.toString()}
+                            />
+                        {/if}
+                    </SensorGroup>
                 </div>
 
                 {#if environmental.aggregate.lastUpdate}
@@ -279,20 +280,18 @@
 
             {#if fan.aggregate?.value}
                 {@const data = fan.aggregate.value}
-                <div class="fan-readings">
-                    <div class="fan-reading">
-                        <span class="label">Power</span>
-                        <span class="value"
-                            >{data.power !== null ? data.power.toFixed(1) + '%' : 'N/A'}</span
-                        >
-                    </div>
-                    <div class="fan-reading">
-                        <span class="label">Speed</span>
-                        <span class="value"
-                            >{data.tachometer !== null ? data.tachometer + ' RPM' : 'N/A'}</span
-                        >
-                    </div>
-                </div>
+                <SensorGroup>
+                    <SensorReading
+                        label="Power"
+                        value={data.power !== null ? data.power.toFixed(1) : 'N/A'}
+                        unit={data.power !== null ? '%' : ''}
+                    />
+                    <SensorReading
+                        label="Speed"
+                        value={data.tachometer !== null ? data.tachometer.toString() : 'N/A'}
+                        unit={data.tachometer !== null ? ' RPM' : ''}
+                    />
+                </SensorGroup>
 
                 {#if fan.aggregate.lastUpdate}
                     <div class="last-update">
@@ -307,20 +306,15 @@
 
             {#if fan.powerOverride}
                 <div class="fan-override">
-                    <label for="fan-override">Power Override</label>
-                    <div class="slider-container">
-                        <input
-                            type="range"
-                            id="fan-override"
-                            min="0"
-                            max="100"
-                            step="0.5"
-                            bind:value={fanPowerOverride}
-                            onchange={setFanPowerOverride}
-                            class="fan-slider"
-                        />
-                        <span class="slider-value">{fanPowerOverride.toFixed(1)}%</span>
-                    </div>
+                    <SliderControl
+                        label="Power Override"
+                        bind:value={fanPowerOverride}
+                        min={0}
+                        max={100}
+                        step={0.5}
+                        decimals={1}
+                        onchange={setFanPowerOverride}
+                    />
                     <button
                         onclick={clearFanPowerOverride}
                         class="clear-button"
@@ -347,28 +341,24 @@
 
             {#if !showServoCalibration}
                 {#if servo.position?.value !== null && servo.position?.value !== undefined}
-                    <div class="servo-status">
-                        <span class="label">Current Position</span>
-                        <span class="value">{servo.position.value.toFixed(1)}%</span>
-                    </div>
+                    <SensorGroup>
+                        <SensorReading
+                            label="Current Position"
+                            value={servo.position.value.toFixed(1)}
+                            unit="%"
+                        />
+                    </SensorGroup>
                 {/if}
 
-                <div class="servo-controls">
-                    <label for="servo-slider" class="control-label">Set Position</label>
-                    <div class="slider-control">
-                        <input
-                            type="range"
-                            id="servo-slider"
-                            min="0"
-                            max="100"
-                            step="1"
-                            bind:value={servoPosition}
-                            onchange={setServoPosition}
-                            class="servo-slider"
-                        />
-                        <span class="slider-value">{servoPosition}%</span>
-                    </div>
-                </div>
+                <SliderControl
+                    label="Set Position"
+                    bind:value={servoPosition}
+                    min={0}
+                    max={100}
+                    step={1}
+                    decimals={0}
+                    onchange={setServoPosition}
+                />
 
                 {#if servo.position?.lastUpdate}
                     <div class="last-update">
@@ -377,105 +367,17 @@
                 {/if}
             {:else}
                 <!-- Calibration Mode -->
-                <div class="calibration-mode">
-                    <p class="calibration-hint">
-                        Adjust duty cycle values to calibrate servo range. Use test buttons to
-                        verify positions.
-                    </p>
-
-                    <div class="calibration-section">
-                        <h4>Minimum Position (0%)</h4>
-                        <div class="duty-display">
-                            <span class="duty-value">{servoMinDuty.toFixed(3)}ms</span>
-                            <span class="duty-percentage"
-                                >({dutyToPercentage(servoMinDuty).toFixed(2)}%)</span
-                            >
-                        </div>
-                        <div class="adjustment-buttons">
-                            <button onclick={() => adjustServoDuty('min', -0.1)} class="adj-btn"
-                                >-0.1ms</button
-                            >
-                            <button onclick={() => adjustServoDuty('min', -0.05)} class="adj-btn"
-                                >-0.05ms</button
-                            >
-                            <button onclick={() => adjustServoDuty('min', -0.01)} class="adj-btn"
-                                >-0.01ms</button
-                            >
-                            <button onclick={() => adjustServoDuty('min', 0.01)} class="adj-btn"
-                                >+0.01ms</button
-                            >
-                            <button onclick={() => adjustServoDuty('min', 0.05)} class="adj-btn"
-                                >+0.05ms</button
-                            >
-                            <button onclick={() => adjustServoDuty('min', 0.1)} class="adj-btn"
-                                >+0.1ms</button
-                            >
-                        </div>
-                        <button onclick={() => testServoPosition(0)} class="test-button">
-                            Test Minimum Position
-                        </button>
-                    </div>
-
-                    <div class="calibration-section">
-                        <h4>Maximum Position (100%)</h4>
-                        <div class="duty-display">
-                            <span class="duty-value">{servoMaxDuty.toFixed(3)}ms</span>
-                            <span class="duty-percentage"
-                                >({dutyToPercentage(servoMaxDuty).toFixed(2)}%)</span
-                            >
-                        </div>
-                        <div class="adjustment-buttons">
-                            <button onclick={() => adjustServoDuty('max', -0.1)} class="adj-btn"
-                                >-0.1ms</button
-                            >
-                            <button onclick={() => adjustServoDuty('max', -0.05)} class="adj-btn"
-                                >-0.05ms</button
-                            >
-                            <button onclick={() => adjustServoDuty('max', -0.01)} class="adj-btn"
-                                >-0.01ms</button
-                            >
-                            <button onclick={() => adjustServoDuty('max', 0.01)} class="adj-btn"
-                                >+0.01ms</button
-                            >
-                            <button onclick={() => adjustServoDuty('max', 0.05)} class="adj-btn"
-                                >+0.05ms</button
-                            >
-                            <button onclick={() => adjustServoDuty('max', 0.1)} class="adj-btn"
-                                >+0.1ms</button
-                            >
-                        </div>
-                        <button onclick={() => testServoPosition(100)} class="test-button">
-                            Test Maximum Position
-                        </button>
-                    </div>
-
-                    <button onclick={swapServoRange} class="swap-button">
-                        ↔️ Swap Min/Max (Reverse Direction)
-                    </button>
-
-                    <div class="klipper-config">
-                        <h4>Klipper Configuration</h4>
-                        <pre><code
-                                ><span class="comment"
-                                    ># seconds \in (0, 0.02), duration of pulse when requested 0%</span
-                                >
-<span class="key">vent_servo_pulse_width_min:</span> <span class="value"
-                                    >{(servoMinDuty / 1000).toFixed(6)}</span
-                                >
-<span class="comment"># seconds \in (0, 0.02), duration of pulse when requesting 100%</span>
-<span class="key">vent_servo_pulse_width_max:</span> <span class="value"
-                                    >{(servoMaxDuty / 1000).toFixed(6)}</span
-                                ></code
-                            ></pre>
-                    </div>
-
-                    {#if servo.position?.value !== null && servo.position?.value !== undefined}
-                        <div class="servo-status">
-                            <span class="label">Current Position</span>
-                            <span class="value">{servo.position.value.toFixed(1)}%</span>
-                        </div>
-                    {/if}
-                </div>
+                <ServoCalibration
+                    bind:minDutyMs={servoMinDuty}
+                    bind:maxDutyMs={servoMaxDuty}
+                    currentPosition={servo.position?.value}
+                    servoPeriodMs={SERVO_PERIOD_MS}
+                    onAdjustMin={(delta) => adjustServoDuty('min', delta)}
+                    onAdjustMax={(delta) => adjustServoDuty('max', delta)}
+                    onTestMin={() => testServoPosition(0)}
+                    onTestMax={() => testServoPosition(100)}
+                    onSwap={swapServoRange}
+                />
             {/if}
         </div>
     {/if}
@@ -549,41 +451,6 @@
         margin-bottom: 1rem;
     }
 
-    .sensor-group h4 {
-        margin: 0 0 0.75rem 0;
-        font-size: 1rem;
-        color: var(--text-muted, #666);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .sensor-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1rem;
-    }
-
-    .sensor-reading {
-        display: flex;
-        flex-direction: column;
-        padding: 0.75rem;
-        background: var(--sensor-bg, #f8f8f8);
-        border-radius: 4px;
-    }
-
-    .sensor-reading .label {
-        font-size: 0.85rem;
-        color: var(--text-muted, #666);
-        margin-bottom: 0.25rem;
-    }
-
-    .sensor-reading .value {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--text-color, #333);
-    }
-
     .last-update {
         font-size: 0.85rem;
         color: var(--text-muted, #888);
@@ -623,94 +490,8 @@
         color: var(--text-color, #333);
     }
 
-    .fan-readings {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .fan-reading {
-        display: flex;
-        flex-direction: column;
-        padding: 0.75rem;
-        background: var(--sensor-bg, #f8f8f8);
-        border-radius: 4px;
-        min-width: 150px;
-    }
-
-    .fan-reading .label {
-        font-size: 0.85rem;
-        color: var(--text-muted, #666);
-        margin-bottom: 0.25rem;
-    }
-
-    .fan-reading .value {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--text-color, #333);
-    }
-
     .fan-override {
         margin-top: 1.5rem;
-    }
-
-    .fan-override label {
-        display: block;
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--text-color, #333);
-        margin-bottom: 0.5rem;
-    }
-
-    .slider-container {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .slider-value {
-        min-width: 50px;
-        font-weight: 600;
-        color: var(--text-color, #333);
-    }
-
-    .fan-slider {
-        flex: 1;
-        height: 6px;
-        border-radius: 3px;
-        background: var(--sensor-bg, #f8f8f8);
-        outline: none;
-        -webkit-appearance: none;
-        appearance: none;
-    }
-
-    .fan-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: var(--button-bg, #007bff);
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .fan-slider::-webkit-slider-thumb:hover {
-        background: var(--button-hover, #0056b3);
-    }
-
-    .fan-slider::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: var(--button-bg, #007bff);
-        cursor: pointer;
-        border: none;
-        transition: background 0.2s;
-    }
-
-    .fan-slider::-moz-range-thumb:hover {
-        background: var(--button-hover, #0056b3);
     }
 
     .clear-button {
@@ -748,93 +529,6 @@
         color: var(--text-color, #333);
     }
 
-    .servo-status {
-        display: flex;
-        flex-direction: column;
-        padding: 0.75rem;
-        background: var(--sensor-bg, #f8f8f8);
-        border-radius: 4px;
-        margin-bottom: 1rem;
-        max-width: 200px;
-    }
-
-    .servo-status .label {
-        font-size: 0.85rem;
-        color: var(--text-muted, #666);
-        margin-bottom: 0.25rem;
-    }
-
-    .servo-status .value {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--text-color, #333);
-    }
-
-    .servo-controls {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .control-label {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--text-color, #333);
-    }
-
-    .slider-control {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .servo-slider {
-        flex: 1;
-        height: 6px;
-        border-radius: 3px;
-        background: var(--sensor-bg, #f8f8f8);
-        outline: none;
-        -webkit-appearance: none;
-        appearance: none;
-    }
-
-    .servo-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: var(--button-bg, #007bff);
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .servo-slider::-webkit-slider-thumb:hover {
-        background: var(--button-hover, #0056b3);
-    }
-
-    .servo-slider::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: var(--button-bg, #007bff);
-        cursor: pointer;
-        border: none;
-        transition: background 0.2s;
-    }
-
-    .servo-slider::-moz-range-thumb:hover {
-        background: var(--button-hover, #0056b3);
-    }
-
-    .slider-value {
-        min-width: 50px;
-        font-weight: 600;
-        color: var(--text-color, #333);
-        text-align: right;
-    }
-
     .servo-header {
         display: flex;
         justify-content: space-between;
@@ -860,167 +554,5 @@
 
     .calibrate-button:hover {
         background: var(--hover-bg, #f0f0f0);
-    }
-
-    .calibration-mode {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .calibration-hint {
-        margin: 0;
-        padding: 0.75rem;
-        background: var(--sensor-bg, #f8f8f8);
-        border-left: 3px solid var(--button-bg, #007bff);
-        border-radius: 4px;
-        color: var(--text-muted, #666);
-        font-size: 0.9rem;
-    }
-
-    .calibration-section {
-        padding: 1rem;
-        background: var(--sensor-bg, #f8f8f8);
-        border-radius: 6px;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .calibration-section h4 {
-        margin: 0;
-        font-size: 1rem;
-        color: var(--text-color, #333);
-        font-weight: 600;
-    }
-
-    .duty-display {
-        display: flex;
-        align-items: baseline;
-        gap: 0.5rem;
-    }
-
-    .duty-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--text-color, #333);
-    }
-
-    .duty-percentage {
-        font-size: 0.9rem;
-        color: var(--text-muted, #666);
-    }
-
-    .adjustment-buttons {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.5rem;
-    }
-
-    .adj-btn {
-        padding: 0.5rem;
-        background: var(--bg-color, #fff);
-        color: var(--text-color, #333);
-        border: 1px solid var(--border-color, #ccc);
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.85rem;
-        font-weight: 600;
-        transition: all 0.2s;
-    }
-
-    .adj-btn:hover {
-        background: var(--hover-bg, #f0f0f0);
-        border-color: var(--button-bg, #007bff);
-    }
-
-    .test-button {
-        padding: 0.625rem 1rem;
-        background: var(--button-bg, #007bff);
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.9rem;
-        font-weight: 600;
-        transition: background 0.2s;
-    }
-
-    .test-button:hover {
-        background: var(--button-hover, #0056b3);
-    }
-
-    .swap-button {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        background: var(--sensor-bg, #f8f8f8);
-        color: var(--text-color, #333);
-        border: 1px solid var(--border-color, #ccc);
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.95rem;
-        font-weight: 600;
-        transition: all 0.2s;
-    }
-
-    .swap-button:hover {
-        background: var(--hover-bg, #f0f0f0);
-        border-color: var(--button-bg, #007bff);
-    }
-
-    .klipper-config {
-        padding: 1rem;
-        background: var(--sensor-bg, #f8f8f8);
-        border-radius: 6px;
-        border: 1px solid var(--border-color, #ccc);
-    }
-
-    .klipper-config h4 {
-        margin: 0 0 0.75rem 0;
-        font-size: 0.95rem;
-        color: var(--text-color, #333);
-        font-weight: 600;
-    }
-
-    .klipper-config pre {
-        margin: 0;
-        padding: 0.75rem;
-        background: var(--bg-color, #fff);
-        border-radius: 4px;
-        overflow-x: auto;
-    }
-
-    .klipper-config code {
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 0.85rem;
-        line-height: 1.5;
-        color: var(--text-color, #333);
-    }
-
-    .klipper-config .comment {
-        color: #6a9955;
-        font-style: italic;
-    }
-
-    .klipper-config .key {
-        color: #0066cc;
-        font-weight: 600;
-    }
-
-    .klipper-config .value {
-        color: #d73a49;
-        font-weight: 600;
-    }
-
-    :global(.dark) .klipper-config .comment {
-        color: #6a9955;
-    }
-
-    :global(.dark) .klipper-config .key {
-        color: #4fc3f7;
-    }
-
-    :global(.dark) .klipper-config .value {
-        color: #f48771;
     }
 </style>
