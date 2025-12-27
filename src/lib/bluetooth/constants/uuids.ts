@@ -1,82 +1,82 @@
 // Standard Bluetooth GATT Service UUIDs
 export const SERVICES = {
-	ENVIRONMENTAL_SENSING: 0x181A,
-	DEVICE_INFORMATION: 0x180A
+    ENVIRONMENTAL_SENSING: 0x181a,
+    DEVICE_INFORMATION: 0x180a
 } as const;
 
 // Standard Bluetooth GATT Characteristic UUIDs
 export const STANDARD_CHARACTERISTICS = {
-	TEMPERATURE: 0x2A6E,
-	HUMIDITY: 0x2A6F,
-	PRESSURE: 0x2A6D,
-	PERCENTAGE_8: 0x2B04,
-	TIME_SECOND_16: 0x2B16,
-	TIME_MILLI_24: 0x2B15,
-	COUNT_16: 0x2AEA
+    TEMPERATURE: 0x2a6e,
+    HUMIDITY: 0x2a6f,
+    PRESSURE: 0x2a6d,
+    PERCENTAGE_8: 0x2b04,
+    TIME_SECOND_16: 0x2b16,
+    TIME_MILLI_24: 0x2b15,
+    COUNT_16: 0x2aea
 } as const;
 
 // Nevermore Custom Service UUIDs
 export const NEVERMORE_SERVICES = {
-	FAN: '4553d138-1d00-4b6f-bc42-955a89cf8c36',
-	FAN_POLICY: '260a0845-e62f-48c6-aef9-04f62ff8bffd',
-	NEOPIXEL: 'f62918ab-33b7-4f47-9fba-8ce9de9fecbb',
-	DISPLAY: '7be8ac4b-7eb4-4e09-b134-91a46b622832',
-	PHOTOCATALYTIC: 'de44dd71-2400-4cd1-a3f3-9fb00c4697d7',
-	COOLER: 'e67b7c24-ae14-40b3-a761-a543d83f026b',
-	SERVO: '8959bb3e-3063-4a46-9b9a-69fdbc327f1c',
-	CONFIGURATION: 'b5078b20-aea3-4c37-a18f-b370c03f02a6'
+    FAN: '4553d138-1d00-4b6f-bc42-955a89cf8c36',
+    FAN_POLICY: '260a0845-e62f-48c6-aef9-04f62ff8bffd',
+    NEOPIXEL: 'f62918ab-33b7-4f47-9fba-8ce9de9fecbb',
+    DISPLAY: '7be8ac4b-7eb4-4e09-b134-91a46b622832',
+    PHOTOCATALYTIC: 'de44dd71-2400-4cd1-a3f3-9fb00c4697d7',
+    COOLER: 'e67b7c24-ae14-40b3-a761-a543d83f026b',
+    SERVO: '8959bb3e-3063-4a46-9b9a-69fdbc327f1c',
+    CONFIGURATION: 'b5078b20-aea3-4c37-a18f-b370c03f02a6'
 } as const;
 
 // Nevermore Custom Characteristic UUIDs
 export const NEVERMORE_CHARACTERISTICS = {
-	// VOC Sensors
-	VOC_INDEX: '216aa791-97d0-46ac-8752-60bbc00611e1',
-	VOC_RAW: 'c3acb286-8071-427b-bbed-d64987373f23',
+    // VOC Sensors
+    VOC_INDEX: '216aa791-97d0-46ac-8752-60bbc00611e1',
+    VOC_RAW: 'c3acb286-8071-427b-bbed-d64987373f23',
 
-	// Aggregation
-	ENV_AGGREGATE: '75134bec-dd06-49b1-bac2-c15e05fd7199',
-	FAN_POWER_TACHO_AGGREGATE: '79cd747f-91af-49a6-95b2-5b597c683129',
+    // Aggregation
+    ENV_AGGREGATE: '75134bec-dd06-49b1-bac2-c15e05fd7199',
+    FAN_POWER_TACHO_AGGREGATE: '79cd747f-91af-49a6-95b2-5b597c683129',
 
-	// Fan Control
-	TACHOMETER: '03f61fe0-9fe7-4516-98e6-056de551687f',
-	THERMAL_LIMIT: '45d2e7d7-40c4-46a6-a160-43eb02d01e27',
+    // Fan Control
+    TACHOMETER: '03f61fe0-9fe7-4516-98e6-056de551687f',
+    THERMAL_LIMIT: '45d2e7d7-40c4-46a6-a160-43eb02d01e27',
 
-	// Servo
-	SERVO_RANGE: '9c327c7f-188f-4345-950f-bd586f13f324',
-	SERVO_POSITION: '0543a134-244f-405b-9d43-0351a5336ef7',
+    // Servo
+    SERVO_RANGE: '9c327c7f-188f-4345-950f-bd586f13f324',
+    SERVO_POSITION: '0543a134-244f-405b-9d43-0351a5336ef7',
 
-	// NeoPixel
-	NEOPIXEL_UPDATE_SPAN: '5d91b6ce-7db1-4e06-b8cb-d75e7dd49aae',
+    // NeoPixel
+    NEOPIXEL_UPDATE_SPAN: '5d91b6ce-7db1-4e06-b8cb-d75e7dd49aae',
 
-	// Display
-	DISPLAY_UI: '86a25d55-1893-4d01-8ea8-8970f622c243',
+    // Display
+    DISPLAY_UI: '86a25d55-1893-4d01-8ea8-8970f622c243',
 
-	// Configuration
-	CONFIG_REBOOT: 'f48a18bb-e03c-4583-8006-5b54422e2045',
-	CONFIG_FLAGS: 'd4b66bf4-3d8f-4746-b6a2-8a59d2eac3ce',
-	CONFIG_CHECKPOINT_CALIBRATION: 'a84b00c0-7102-4cc6-a4ea-a65050502d3f',
-	CONFIG_RESET_CALIBRATION: '75bf055c-02be-466f-8c7d-6ebc72078048',
-	CONFIG_RESET_SETTINGS: 'f2810b13-8cd7-4d6f-bb1b-e276db7fadbf',
-	CONFIG_VOC_CALIBRATION_ENABLED: 'ee786ac0-7700-47dd-b7de-9958f96303f2',
-	CONFIG_PINS: '2e9410cb-30fd-4b2c-8c95-934226a9ba29',
-	CONFIG_PINS_DEFAULT: '5b1dc210-6a51-4cf9-bda7-085604199856',
-	CONFIG_PINS_VALIDATION: '0f6d7c4b-c30c-45b2-b32a-0e5b130429f0'
+    // Configuration
+    CONFIG_REBOOT: 'f48a18bb-e03c-4583-8006-5b54422e2045',
+    CONFIG_FLAGS: 'd4b66bf4-3d8f-4746-b6a2-8a59d2eac3ce',
+    CONFIG_CHECKPOINT_CALIBRATION: 'a84b00c0-7102-4cc6-a4ea-a65050502d3f',
+    CONFIG_RESET_CALIBRATION: '75bf055c-02be-466f-8c7d-6ebc72078048',
+    CONFIG_RESET_SETTINGS: 'f2810b13-8cd7-4d6f-bb1b-e276db7fadbf',
+    CONFIG_VOC_CALIBRATION_ENABLED: 'ee786ac0-7700-47dd-b7de-9958f96303f2',
+    CONFIG_PINS: '2e9410cb-30fd-4b2c-8c95-934226a9ba29',
+    CONFIG_PINS_DEFAULT: '5b1dc210-6a51-4cf9-bda7-085604199856',
+    CONFIG_PINS_VALIDATION: '0f6d7c4b-c30c-45b2-b32a-0e5b130429f0'
 } as const;
 
 // Helper to convert number to UUID string
 export function toUuidString(uuid: number): string {
-	const hex = uuid.toString(16).padStart(4, '0');
-	return `0000${hex}-0000-1000-8000-00805f9b34fb`;
+    const hex = uuid.toString(16).padStart(4, '0');
+    return `0000${hex}-0000-1000-8000-00805f9b34fb`;
 }
 
 // NOT_KNOWN sentinel values for optional characteristics
 export const NOT_KNOWN = {
-	TEMPERATURE: 0x8000,
-	HUMIDITY: 0xFFFF,
-	PRESSURE: 0xFFFFFFFF,
-	PERCENTAGE_8: 0xFF,
-	PERCENTAGE_16: 0xFFFF,
-	TIME_SECOND_16: 0xFFFF,
-	TIME_MILLI_24: 0xFFFFFF,
-	COUNT_16: 0xFFFF
+    TEMPERATURE: 0x8000,
+    HUMIDITY: 0xffff,
+    PRESSURE: 0xffffffff,
+    PERCENTAGE_8: 0xff,
+    PERCENTAGE_16: 0xffff,
+    TIME_SECOND_16: 0xffff,
+    TIME_MILLI_24: 0xffffff,
+    COUNT_16: 0xffff
 } as const;

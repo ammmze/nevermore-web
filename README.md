@@ -57,6 +57,7 @@ GitHub Actions automatically builds and deploys to GitHub Pages on push to main.
 ## Implementation Status
 
 ### Completed
+
 - ✅ Project setup with SvelteKit + Svelte 5
 - ✅ Web Bluetooth device connection
 - ✅ Environmental Sensing service
@@ -65,6 +66,7 @@ GitHub Actions automatically builds and deploys to GitHub Pages on push to main.
 - ✅ GitHub Pages deployment workflow
 
 ### Planned
+
 - ⏳ Fan control service
 - ⏳ Fan policy configuration
 - ⏳ NeoPixel control
