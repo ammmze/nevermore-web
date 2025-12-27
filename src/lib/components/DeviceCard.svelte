@@ -312,10 +312,10 @@
 
 					<div class="klipper-config">
 						<h4>Klipper Configuration</h4>
-						<pre><code># seconds \in (0, 0.02), duration of pulse when requested 0%
-vent_servo_pulse_width_min: {(servoMinDuty / 1000).toFixed(6)}
-# seconds \in (0, 0.02), duration of pulse when requesting 100%
-vent_servo_pulse_width_max: {(servoMaxDuty / 1000).toFixed(6)}</code></pre>
+						<pre><code><span class="comment"># seconds \in (0, 0.02), duration of pulse when requested 0%</span>
+<span class="key">vent_servo_pulse_width_min:</span> <span class="value">{(servoMinDuty / 1000).toFixed(6)}</span>
+<span class="comment"># seconds \in (0, 0.02), duration of pulse when requesting 100%</span>
+<span class="key">vent_servo_pulse_width_max:</span> <span class="value">{(servoMaxDuty / 1000).toFixed(6)}</span></code></pre>
 					</div>
 
 					{#if servo.position?.value !== null && servo.position?.value !== undefined}
@@ -736,5 +736,32 @@ vent_servo_pulse_width_max: {(servoMaxDuty / 1000).toFixed(6)}</code></pre>
 		font-size: 0.85rem;
 		line-height: 1.5;
 		color: var(--text-color, #333);
+	}
+
+	.klipper-config .comment {
+		color: #6a9955;
+		font-style: italic;
+	}
+
+	.klipper-config .key {
+		color: #0066cc;
+		font-weight: 600;
+	}
+
+	.klipper-config .value {
+		color: #d73a49;
+		font-weight: 600;
+	}
+
+	:global(.dark) .klipper-config .comment {
+		color: #6a9955;
+	}
+
+	:global(.dark) .klipper-config .key {
+		color: #4fc3f7;
+	}
+
+	:global(.dark) .klipper-config .value {
+		color: #f48771;
 	}
 </style>
