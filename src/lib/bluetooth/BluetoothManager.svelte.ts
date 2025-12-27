@@ -2,10 +2,19 @@ import { DeviceConnection } from './DeviceConnection.svelte';
 import { NEVERMORE_SERVICES, SERVICES, toUuidString } from './constants/uuids';
 
 class BluetoothManager {
-	devices = $state<Map<string, DeviceConnection>>(new Map());
+	private _devices = $state<Map<string, DeviceConnection>>(new Map());
 	isScanning = $state(false);
 	error = $state<string | null>(null);
 	isSupported = $state(false);
+
+	// Expose devices as a reactive array
+	get devices() {
+		return Array.from(this._devices.values());
+	}
+
+	get devicesMap() {
+		return this._devices;
+	}
 
 	constructor() {
 		// Check if Web Bluetooth is supported
@@ -43,7 +52,9 @@ class BluetoothManager {
 			});
 
 			const connection = new DeviceConnection(device);
-			this.devices.set(connection.id, connection);
+			this._devices.set(connection.id, connection);
+			// Trigger reactivity by reassigning
+			this._devices = new Map(this._devices);
 
 			// Auto-connect
 			await connection.connect();
@@ -63,32 +74,36 @@ class BluetoothManager {
 	}
 
 	getDevice(id: string): DeviceConnection | null {
-		return this.devices.get(id) || null;
+		return this._devices.get(id) || null;
 	}
 
 	async disconnectDevice(id: string): Promise<void> {
-		const device = this.devices.get(id);
+		const device = this._devices.get(id);
 		if (device) {
 			await device.disconnect();
 			device.cleanup();
-			this.devices.delete(id);
+			this._devices.delete(id);
+			// Trigger reactivity
+			this._devices = new Map(this._devices);
 		}
 	}
 
 	async disconnectAll(): Promise<void> {
-		for (const [id, device] of this.devices) {
+		for (const [id, device] of this._devices) {
 			await device.disconnect();
 			device.cleanup();
 		}
-		this.devices.clear();
+		this._devices.clear();
+		// Trigger reactivity
+		this._devices = new Map(this._devices);
 	}
 
 	get connectedDevices(): DeviceConnection[] {
-		return Array.from(this.devices.values()).filter(d => d.connected);
+		return this.devices.filter(d => d.connected);
 	}
 
 	get deviceCount(): number {
-		return this.devices.size;
+		return this.devices.length;
 	}
 
 	get connectedCount(): number {

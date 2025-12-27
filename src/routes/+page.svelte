@@ -55,13 +55,13 @@
 		</div>
 
 		<div class="devices">
-			{#if bluetoothManager.devices.size === 0}
+			{#if bluetoothManager.devices.length === 0}
 				<div class="empty-state">
 					<p>No devices connected</p>
 					<p class="hint">Click "Connect Device" to pair with a Nevermore controller</p>
 				</div>
 			{:else}
-				{#each Array.from(bluetoothManager.devices.values()) as device (device.id)}
+				{#each bluetoothManager.devices as device (device.id)}
 					<div class="device-wrapper">
 						<DeviceCard {device} />
 						<button onclick={() => disconnectDevice(device.id)} class="disconnect-button">
