@@ -62,12 +62,7 @@
 				</div>
 			{:else}
 				{#each bluetoothManager.devices as device (device.id)}
-					<div class="device-wrapper">
-						<DeviceCard {device} />
-						<button onclick={() => disconnectDevice(device.id)} class="disconnect-button">
-							Disconnect
-						</button>
-					</div>
+					<DeviceCard {device} ondisconnect={() => disconnectDevice(device.id)} />
 				{/each}
 			{/if}
 		</div>
@@ -218,27 +213,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-	}
-
-	.device-wrapper {
-		position: relative;
-	}
-
-	.disconnect-button {
-		position: absolute;
-		top: 1rem;
-		right: 1rem;
-		padding: 0.5rem 1rem;
-		background: var(--disconnect-bg);
-		color: white;
-		border: none;
-		border-radius: 4px;
-		cursor: pointer;
-		font-size: 0.9rem;
-	}
-
-	.disconnect-button:hover {
-		background: var(--disconnect-hover);
 	}
 
 	.empty-state {

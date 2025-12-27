@@ -3,7 +3,7 @@
 	import { EnvironmentalSensing } from '$lib/bluetooth/services/EnvironmentalSensing.svelte';
 	import { SERVICES, toUuidString } from '$lib/bluetooth/constants/uuids';
 
-	let { device }: { device: DeviceConnection } = $props();
+	let { device, ondisconnect }: { device: DeviceConnection; ondisconnect: () => void } = $props();
 
 	let environmental = $state<EnvironmentalSensing | null>(null);
 	let loading = $state(false);
@@ -35,9 +35,14 @@
 <div class="device-card">
 	<div class="device-header">
 		<h2>{device.name}</h2>
-		<span class="status {device.connected ? 'connected' : 'disconnected'}">
-			{device.connected ? '● Connected' : '○ Disconnected'}
-		</span>
+		<div class="device-actions">
+			<span class="status {device.connected ? 'connected' : 'disconnected'}">
+				{device.connected ? '● Connected' : '○ Disconnected'}
+			</span>
+			<button onclick={ondisconnect} class="disconnect-button">
+				Disconnect
+			</button>
+		</div>
 	</div>
 
 	{#if device.error}
@@ -124,12 +129,20 @@
 		justify-content: space-between;
 		align-items: center;
 		margin-bottom: 1rem;
+		gap: 1rem;
 	}
 
 	.device-header h2 {
 		margin: 0;
 		font-size: 1.5rem;
 		color: var(--text-color, #333);
+		flex: 1;
+	}
+
+	.device-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
 	}
 
 	.status {
@@ -197,5 +210,21 @@
 
 	.sensors p {
 		color: var(--text-muted, #666);
+	}
+
+	.disconnect-button {
+		padding: 0.375rem 0.75rem;
+		background: var(--disconnect-bg, #dc3545);
+		color: white;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		font-size: 0.875rem;
+		transition: background 0.2s;
+		white-space: nowrap;
+	}
+
+	.disconnect-button:hover {
+		background: var(--disconnect-hover, #c82333);
 	}
 </style>
