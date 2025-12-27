@@ -1,21 +1,30 @@
 <script lang="ts">
 	import type { DeviceConnection } from '$lib/bluetooth/DeviceConnection.svelte';
 	import { EnvironmentalSensing } from '$lib/bluetooth/services/EnvironmentalSensing.svelte';
-	import { SERVICES, toUuidString } from '$lib/bluetooth/constants/uuids';
+	import { Servo } from '$lib/bluetooth/services/Servo.svelte';
+	import { SERVICES, NEVERMORE_SERVICES, toUuidString } from '$lib/bluetooth/constants/uuids';
 
 	let { device, ondisconnect }: { device: DeviceConnection; ondisconnect: () => void } = $props();
 
 	let environmental = $state<EnvironmentalSensing | null>(null);
+	let servo = $state<Servo | null>(null);
 	let loading = $state(false);
 
 	async function loadServices() {
 		loading = true;
 		try {
 			// Load environmental sensing service
-			const service = await device.getService(toUuidString(SERVICES.ENVIRONMENTAL_SENSING));
-			if (service) {
-				environmental = new EnvironmentalSensing(service);
+			const envService = await device.getService(toUuidString(SERVICES.ENVIRONMENTAL_SENSING));
+			if (envService) {
+				environmental = new EnvironmentalSensing(envService);
 				await environmental.discover();
+			}
+
+			// Load servo service
+			const servoService = await device.getService(NEVERMORE_SERVICES.SERVO);
+			if (servoService) {
+				servo = new Servo(servoService);
+				await servo.discover();
 			}
 		} catch (e) {
 			console.error('Error loading services:', e);
@@ -24,9 +33,21 @@
 		}
 	}
 
+	let servoPosition = $state(0);
+
+	async function setServoPosition() {
+		if (servo) {
+			try {
+				await servo.setPosition(servoPosition);
+			} catch (e) {
+				console.error('Error setting servo position:', e);
+			}
+		}
+	}
+
 	// Load services when device connects
 	$effect(() => {
-		if (device.connected && !environmental && !loading) {
+		if (device.connected && !environmental && !servo && !loading) {
 			loadServices();
 		}
 	});
@@ -56,48 +77,58 @@
 			{#if environmental.aggregate?.value}
 				{@const data = environmental.aggregate.value}
 
-				<div class="sensor-grid">
-					{#if data.temperatureIntake !== null}
-						<div class="sensor-reading">
-							<span class="label">Intake Temp</span>
-							<span class="value">{data.temperatureIntake.toFixed(1)}°C</span>
-						</div>
-					{/if}
+				<div class="sensor-groups">
+					<div class="sensor-group">
+						<h4>Intake</h4>
+						<div class="sensor-grid">
+							{#if data.temperatureIntake !== null}
+								<div class="sensor-reading">
+									<span class="label">Temperature</span>
+									<span class="value">{data.temperatureIntake.toFixed(1)}°C</span>
+								</div>
+							{/if}
 
-					{#if data.temperatureExhaust !== null}
-						<div class="sensor-reading">
-							<span class="label">Exhaust Temp</span>
-							<span class="value">{data.temperatureExhaust.toFixed(1)}°C</span>
-						</div>
-					{/if}
+							{#if data.humidityIntake !== null}
+								<div class="sensor-reading">
+									<span class="label">Humidity</span>
+									<span class="value">{data.humidityIntake.toFixed(1)}%</span>
+								</div>
+							{/if}
 
-					{#if data.humidityIntake !== null}
-						<div class="sensor-reading">
-							<span class="label">Intake Humidity</span>
-							<span class="value">{data.humidityIntake.toFixed(1)}%</span>
+							{#if data.vocIndexIntake !== null}
+								<div class="sensor-reading">
+									<span class="label">VOC Index</span>
+									<span class="value">{data.vocIndexIntake}</span>
+								</div>
+							{/if}
 						</div>
-					{/if}
+					</div>
 
-					{#if data.humidityExhaust !== null}
-						<div class="sensor-reading">
-							<span class="label">Exhaust Humidity</span>
-							<span class="value">{data.humidityExhaust.toFixed(1)}%</span>
-						</div>
-					{/if}
+					<div class="sensor-group">
+						<h4>Exhaust</h4>
+						<div class="sensor-grid">
+							{#if data.temperatureExhaust !== null}
+								<div class="sensor-reading">
+									<span class="label">Temperature</span>
+									<span class="value">{data.temperatureExhaust.toFixed(1)}°C</span>
+								</div>
+							{/if}
 
-					{#if data.vocIndexIntake !== null}
-						<div class="sensor-reading">
-							<span class="label">Intake VOC</span>
-							<span class="value">{data.vocIndexIntake}</span>
-						</div>
-					{/if}
+							{#if data.humidityExhaust !== null}
+								<div class="sensor-reading">
+									<span class="label">Humidity</span>
+									<span class="value">{data.humidityExhaust.toFixed(1)}%</span>
+								</div>
+							{/if}
 
-					{#if data.vocIndexExhaust !== null}
-						<div class="sensor-reading">
-							<span class="label">Exhaust VOC</span>
-							<span class="value">{data.vocIndexExhaust}</span>
+							{#if data.vocIndexExhaust !== null}
+								<div class="sensor-reading">
+									<span class="label">VOC Index</span>
+									<span class="value">{data.vocIndexExhaust}</span>
+								</div>
+							{/if}
 						</div>
-					{/if}
+					</div>
 				</div>
 
 				{#if environmental.aggregate.lastUpdate}
@@ -109,6 +140,42 @@
 				<p>Loading sensors...</p>
 			{:else}
 				<p>Waiting for sensor data...</p>
+			{/if}
+		</div>
+	{/if}
+
+	{#if device.connected && servo}
+		<div class="servo-control">
+			<h3>Exhaust Vent</h3>
+
+			{#if servo.position?.value !== null && servo.position?.value !== undefined}
+				<div class="servo-status">
+					<span class="label">Current Position</span>
+					<span class="value">{servo.position.value.toFixed(1)}%</span>
+				</div>
+			{/if}
+
+			<div class="servo-controls">
+				<label for="servo-slider" class="control-label">Set Position</label>
+				<div class="slider-control">
+					<input
+						type="range"
+						id="servo-slider"
+						min="0"
+						max="100"
+						step="1"
+						bind:value={servoPosition}
+						class="servo-slider"
+					/>
+					<span class="slider-value">{servoPosition}%</span>
+				</div>
+				<button onclick={setServoPosition} class="apply-button">Apply</button>
+			</div>
+
+			{#if servo.position?.lastUpdate}
+				<div class="last-update">
+					Last update: {servo.position.lastUpdate.toLocaleTimeString()}
+				</div>
 			{/if}
 		</div>
 	{/if}
@@ -175,11 +242,26 @@
 		color: var(--text-color, #333);
 	}
 
+	.sensor-groups {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.sensor-group h4 {
+		margin: 0 0 0.75rem 0;
+		font-size: 1rem;
+		color: var(--text-muted, #666);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
 	.sensor-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 		gap: 1rem;
-		margin-bottom: 1rem;
 	}
 
 	.sensor-reading {
@@ -226,5 +308,122 @@
 
 	.disconnect-button:hover {
 		background: var(--disconnect-hover, #c82333);
+	}
+
+	.servo-control {
+		border-top: 1px solid var(--border-color, #ccc);
+		padding-top: 1.5rem;
+		margin-top: 1.5rem;
+	}
+
+	.servo-control h3 {
+		margin-top: 0;
+		margin-bottom: 1rem;
+		font-size: 1.2rem;
+		color: var(--text-color, #333);
+	}
+
+	.servo-status {
+		display: flex;
+		flex-direction: column;
+		padding: 0.75rem;
+		background: var(--sensor-bg, #f8f8f8);
+		border-radius: 4px;
+		margin-bottom: 1rem;
+		max-width: 200px;
+	}
+
+	.servo-status .label {
+		font-size: 0.85rem;
+		color: var(--text-muted, #666);
+		margin-bottom: 0.25rem;
+	}
+
+	.servo-status .value {
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: var(--text-color, #333);
+	}
+
+	.servo-controls {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.control-label {
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--text-color, #333);
+	}
+
+	.slider-control {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.servo-slider {
+		flex: 1;
+		height: 6px;
+		border-radius: 3px;
+		background: var(--sensor-bg, #f8f8f8);
+		outline: none;
+		-webkit-appearance: none;
+		appearance: none;
+	}
+
+	.servo-slider::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: var(--button-bg, #007bff);
+		cursor: pointer;
+		transition: background 0.2s;
+	}
+
+	.servo-slider::-webkit-slider-thumb:hover {
+		background: var(--button-hover, #0056b3);
+	}
+
+	.servo-slider::-moz-range-thumb {
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: var(--button-bg, #007bff);
+		cursor: pointer;
+		border: none;
+		transition: background 0.2s;
+	}
+
+	.servo-slider::-moz-range-thumb:hover {
+		background: var(--button-hover, #0056b3);
+	}
+
+	.slider-value {
+		min-width: 50px;
+		font-weight: 600;
+		color: var(--text-color, #333);
+		text-align: right;
+	}
+
+	.apply-button {
+		padding: 0.5rem 1.5rem;
+		background: var(--button-bg, #007bff);
+		color: white;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		font-size: 0.9rem;
+		font-weight: 600;
+		transition: background 0.2s;
+		align-self: flex-start;
+	}
+
+	.apply-button:hover {
+		background: var(--button-hover, #0056b3);
 	}
 </style>
