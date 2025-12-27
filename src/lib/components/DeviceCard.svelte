@@ -1,12 +1,14 @@
 <script lang="ts">
 	import type { DeviceConnection } from '$lib/bluetooth/DeviceConnection.svelte';
 	import { EnvironmentalSensing } from '$lib/bluetooth/services/EnvironmentalSensing.svelte';
+	import { Fan } from '$lib/bluetooth/services/Fan.svelte';
 	import { Servo } from '$lib/bluetooth/services/Servo.svelte';
 	import { SERVICES, NEVERMORE_SERVICES, toUuidString } from '$lib/bluetooth/constants/uuids';
 
 	let { device, ondisconnect }: { device: DeviceConnection; ondisconnect: () => void } = $props();
 
 	let environmental = $state<EnvironmentalSensing | null>(null);
+	let fan = $state<Fan | null>(null);
 	let servo = $state<Servo | null>(null);
 	let loading = $state(false);
 
@@ -18,6 +20,13 @@
 			if (envService) {
 				environmental = new EnvironmentalSensing(envService);
 				await environmental.discover();
+			}
+
+			// Load fan service
+			const fanService = await device.getService(NEVERMORE_SERVICES.FAN);
+			if (fanService) {
+				fan = new Fan(fanService);
+				await fan.discover();
 			}
 
 			// Load servo service
@@ -33,6 +42,7 @@
 		}
 	}
 
+	let fanPowerOverride = $state(50);
 	let servoPosition = $state(0);
 	let showServoCalibration = $state(false);
 
@@ -64,6 +74,34 @@
 			}
 		}
 	});
+
+	// Initialize fan power override from current value
+	$effect(() => {
+		if (fan?.powerOverride?.value !== undefined && fan?.powerOverride?.value !== null) {
+			fanPowerOverride = fan.powerOverride.value;
+		}
+	});
+
+	async function setFanPowerOverride() {
+		if (fan) {
+			try {
+				await fan.setPowerOverride(fanPowerOverride);
+			} catch (e) {
+				console.error('Error setting fan power override:', e);
+			}
+		}
+	}
+
+	async function clearFanPowerOverride() {
+		if (fan) {
+			try {
+				await fan.setPowerOverride(null);
+				fanPowerOverride = 50; // Reset slider to middle
+			} catch (e) {
+				console.error('Error clearing fan power override:', e);
+			}
+		}
+	}
 
 	async function setServoPosition() {
 		if (servo) {
@@ -125,6 +163,21 @@
 		if (device.connected && !environmental && !servo && !loading) {
 			loadServices();
 		}
+	});
+
+	// Cleanup services on component unmount
+	$effect(() => {
+		return () => {
+			if (environmental) {
+				environmental.cleanup();
+			}
+			if (fan) {
+				fan.cleanup();
+			}
+			if (servo) {
+				servo.cleanup();
+			}
+		};
 	});
 </script>
 
@@ -215,6 +268,62 @@
 				<p>Loading sensors...</p>
 			{:else}
 				<p>Waiting for sensor data...</p>
+			{/if}
+		</div>
+	{/if}
+
+	{#if device.connected && fan}
+		<div class="fan-control">
+			<h3>Fan Control</h3>
+
+			{#if fan.aggregate?.value}
+				{@const data = fan.aggregate.value}
+				<div class="fan-readings">
+					<div class="fan-reading">
+						<span class="label">Power</span>
+						<span class="value">{data.power !== null ? data.power.toFixed(1) + '%' : 'N/A'}</span>
+					</div>
+					<div class="fan-reading">
+						<span class="label">Speed</span>
+						<span class="value">{data.tachometer !== null ? data.tachometer + ' RPM' : 'N/A'}</span>
+					</div>
+				</div>
+
+				{#if fan.aggregate.lastUpdate}
+					<div class="last-update">
+						Last update: {fan.aggregate.lastUpdate.toLocaleTimeString()}
+					</div>
+				{/if}
+			{:else if loading}
+				<p>Loading fan data...</p>
+			{:else}
+				<p>Waiting for fan data...</p>
+			{/if}
+
+			{#if fan.powerOverride}
+				<div class="fan-override">
+					<label for="fan-override">Power Override</label>
+					<div class="slider-container">
+						<input
+							type="range"
+							id="fan-override"
+							min="0"
+							max="100"
+							step="0.5"
+							bind:value={fanPowerOverride}
+							onchange={setFanPowerOverride}
+							class="fan-slider"
+						/>
+						<span class="slider-value">{fanPowerOverride.toFixed(1)}%</span>
+					</div>
+					<button
+						onclick={clearFanPowerOverride}
+						class="clear-button"
+						disabled={fan.powerOverride.value === null}
+					>
+						Clear Override
+					</button>
+				</div>
 			{/if}
 		</div>
 	{/if}
@@ -457,6 +566,131 @@
 
 	.disconnect-button:hover {
 		background: var(--disconnect-hover, #c82333);
+	}
+
+	.fan-control {
+		border-top: 1px solid var(--border-color, #ccc);
+		padding-top: 1.5rem;
+		margin-top: 1.5rem;
+	}
+
+	.fan-control h3 {
+		margin-top: 0;
+		margin-bottom: 1rem;
+		font-size: 1.2rem;
+		color: var(--text-color, #333);
+	}
+
+	.fan-readings {
+		display: flex;
+		gap: 1rem;
+		margin-bottom: 1rem;
+	}
+
+	.fan-reading {
+		display: flex;
+		flex-direction: column;
+		padding: 0.75rem;
+		background: var(--sensor-bg, #f8f8f8);
+		border-radius: 4px;
+		min-width: 150px;
+	}
+
+	.fan-reading .label {
+		font-size: 0.85rem;
+		color: var(--text-muted, #666);
+		margin-bottom: 0.25rem;
+	}
+
+	.fan-reading .value {
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: var(--text-color, #333);
+	}
+
+	.fan-override {
+		margin-top: 1.5rem;
+	}
+
+	.fan-override label {
+		display: block;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--text-color, #333);
+		margin-bottom: 0.5rem;
+	}
+
+	.slider-container {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.slider-value {
+		min-width: 50px;
+		font-weight: 600;
+		color: var(--text-color, #333);
+	}
+
+	.fan-slider {
+		flex: 1;
+		height: 6px;
+		border-radius: 3px;
+		background: var(--sensor-bg, #f8f8f8);
+		outline: none;
+		-webkit-appearance: none;
+		appearance: none;
+	}
+
+	.fan-slider::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: var(--button-bg, #007bff);
+		cursor: pointer;
+		transition: background 0.2s;
+	}
+
+	.fan-slider::-webkit-slider-thumb:hover {
+		background: var(--button-hover, #0056b3);
+	}
+
+	.fan-slider::-moz-range-thumb {
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: var(--button-bg, #007bff);
+		cursor: pointer;
+		border: none;
+		transition: background 0.2s;
+	}
+
+	.fan-slider::-moz-range-thumb:hover {
+		background: var(--button-hover, #0056b3);
+	}
+
+	.clear-button {
+		margin-top: 0.75rem;
+		padding: 0.5rem 1rem;
+		background: var(--button-bg, #007bff);
+		color: white;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		font-size: 0.875rem;
+		transition: background 0.2s;
+	}
+
+	.clear-button:hover:not(:disabled) {
+		background: var(--button-hover, #0056b3);
+	}
+
+	.clear-button:disabled {
+		background: var(--text-muted, #888);
+		cursor: not-allowed;
+		opacity: 0.6;
 	}
 
 	.servo-control {
