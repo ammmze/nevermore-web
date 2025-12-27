@@ -249,11 +249,11 @@
 							max="100"
 							step="1"
 							bind:value={servoPosition}
+							onchange={setServoPosition}
 							class="servo-slider"
 						/>
 						<span class="slider-value">{servoPosition}%</span>
 					</div>
-					<button onclick={setServoPosition} class="apply-button">Apply</button>
 				</div>
 
 				{#if servo.position?.lastUpdate}
@@ -557,23 +557,6 @@
 		font-weight: 600;
 		color: var(--text-color, #333);
 		text-align: right;
-	}
-
-	.apply-button {
-		padding: 0.5rem 1.5rem;
-		background: var(--button-bg, #007bff);
-		color: white;
-		border: none;
-		border-radius: 4px;
-		cursor: pointer;
-		font-size: 0.9rem;
-		font-weight: 600;
-		transition: background 0.2s;
-		align-self: flex-start;
-	}
-
-	.apply-button:hover {
-		background: var(--button-hover, #0056b3);
 	}
 
 	.servo-header {

@@ -54,6 +54,10 @@ export class Servo {
 			encodePercentage16
 		);
 		await writeChar.write(clamped);
+
+		// Read back the value to ensure UI updates
+		// (in case device doesn't send notification immediately)
+		await this.position.read();
 	}
 
 	// Helper to write range
