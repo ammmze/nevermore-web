@@ -43,6 +43,7 @@ All reactive state is declared with `$state`, making it automatically propagate 
 ### Characteristic Discovery Pattern
 
 Some GATT characteristics share the same UUID (e.g., multiple Percentage8 characteristics in Fan service). To identify the correct one:
+
 - Read the characteristic's user description descriptor (UUID: `00002901-0000-1000-8000-00805f9b34fb`)
 - Match by description text (e.g., "Fan % - Override")
 - See `Fan.svelte.ts` for implementation example
@@ -52,6 +53,7 @@ Some GATT characteristics share the same UUID (e.g., multiple Percentage8 charac
 All BLE values use little-endian encoding. Scalar format: `value = raw_value * M * 10^d * 2^b`
 
 Key data types (defined in `parsers.ts`):
+
 - **Percentage8**: `uint8_t`, multiply by 0.5, NOT_KNOWN=0xFF
 - **Percentage16**: `uint16_t`, multiply by 0.01, NOT_KNOWN=0xFFFF
 - **Temperature**: `int16_t`, multiply by 0.01, NOT_KNOWN=0x8000
@@ -61,6 +63,7 @@ Key data types (defined in `parsers.ts`):
 ### Static Site Configuration
 
 Uses `@sveltejs/adapter-static` with:
+
 - Base path: `/nevermore-web` (production only, configured in `svelte.config.js`)
 - All routes prerendered (`+layout.js` has `export const prerender = true`)
 - Static asset generation to `build/` directory
@@ -83,6 +86,7 @@ Uses `@sveltejs/adapter-static` with:
 ## Browser Compatibility
 
 Web Bluetooth API support:
+
 - ✅ Chrome, Edge, Opera (Windows/macOS/Android)
 - ❌ iOS/Safari (no Web Bluetooth support)
 
