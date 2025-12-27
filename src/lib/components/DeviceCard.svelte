@@ -34,6 +34,36 @@
 	}
 
 	let servoPosition = $state(0);
+	let showServoCalibration = $state(false);
+
+	// Servo calibration state (duty cycle in milliseconds)
+	// Standard servo: 20ms period, duty cycle 0.5ms-2.5ms = 2.5%-12.5% = percentage * 0.2
+	const SERVO_PERIOD_MS = 20;
+	let servoMinDuty = $state(0.5); // ms
+	let servoMaxDuty = $state(2.5); // ms
+
+	// Convert duty cycle (ms) to percentage (0-100%)
+	function dutyToPercentage(dutyMs: number): number {
+		return (dutyMs / SERVO_PERIOD_MS) * 100;
+	}
+
+	// Convert percentage (0-100%) to duty cycle (ms)
+	function percentageToDuty(percentage: number): number {
+		return (percentage / 100) * SERVO_PERIOD_MS;
+	}
+
+	// Initialize calibration values from servo range
+	$effect(() => {
+		if (servo?.range?.value) {
+			const range = servo.range.value;
+			if (range.start !== null) {
+				servoMinDuty = percentageToDuty(range.start);
+			}
+			if (range.end !== null) {
+				servoMaxDuty = percentageToDuty(range.end);
+			}
+		}
+	});
 
 	async function setServoPosition() {
 		if (servo) {
@@ -41,6 +71,51 @@
 				await servo.setPosition(servoPosition);
 			} catch (e) {
 				console.error('Error setting servo position:', e);
+			}
+		}
+	}
+
+	async function adjustServoDuty(target: 'min' | 'max', delta: number) {
+		// Adjust the duty cycle value
+		if (target === 'min') {
+			servoMinDuty = Math.max(0.1, Math.min(20, servoMinDuty + delta));
+		} else {
+			servoMaxDuty = Math.max(0.1, Math.min(20, servoMaxDuty + delta));
+		}
+
+		// Immediately apply the new range
+		if (servo) {
+			try {
+				const startPerc = dutyToPercentage(servoMinDuty);
+				const endPerc = dutyToPercentage(servoMaxDuty);
+				await servo.setRange(startPerc, endPerc);
+			} catch (e) {
+				console.error('Error adjusting servo:', e);
+			}
+		}
+	}
+
+	async function testServoPosition(position: 0 | 100) {
+		if (servo) {
+			try {
+				await servo.setPosition(position);
+			} catch (e) {
+				console.error('Error testing servo position:', e);
+			}
+		}
+	}
+
+	async function swapServoRange() {
+		[servoMinDuty, servoMaxDuty] = [servoMaxDuty, servoMinDuty];
+
+		// Apply the swapped range immediately
+		if (servo) {
+			try {
+				const startPerc = dutyToPercentage(servoMinDuty);
+				const endPerc = dutyToPercentage(servoMaxDuty);
+				await servo.setRange(startPerc, endPerc);
+			} catch (e) {
+				console.error('Error swapping servo range:', e);
 			}
 		}
 	}
@@ -146,35 +221,109 @@
 
 	{#if device.connected && servo}
 		<div class="servo-control">
-			<h3>Exhaust Vent</h3>
-
-			{#if servo.position?.value !== null && servo.position?.value !== undefined}
-				<div class="servo-status">
-					<span class="label">Current Position</span>
-					<span class="value">{servo.position.value.toFixed(1)}%</span>
-				</div>
-			{/if}
-
-			<div class="servo-controls">
-				<label for="servo-slider" class="control-label">Set Position</label>
-				<div class="slider-control">
-					<input
-						type="range"
-						id="servo-slider"
-						min="0"
-						max="100"
-						step="1"
-						bind:value={servoPosition}
-						class="servo-slider"
-					/>
-					<span class="slider-value">{servoPosition}%</span>
-				</div>
-				<button onclick={setServoPosition} class="apply-button">Apply</button>
+			<div class="servo-header">
+				<h3>Exhaust Vent</h3>
+				<button
+					onclick={() => showServoCalibration = !showServoCalibration}
+					class="calibrate-button"
+				>
+					{showServoCalibration ? 'Hide' : 'Calibrate'}
+				</button>
 			</div>
 
-			{#if servo.position?.lastUpdate}
-				<div class="last-update">
-					Last update: {servo.position.lastUpdate.toLocaleTimeString()}
+			{#if !showServoCalibration}
+				{#if servo.position?.value !== null && servo.position?.value !== undefined}
+					<div class="servo-status">
+						<span class="label">Current Position</span>
+						<span class="value">{servo.position.value.toFixed(1)}%</span>
+					</div>
+				{/if}
+
+				<div class="servo-controls">
+					<label for="servo-slider" class="control-label">Set Position</label>
+					<div class="slider-control">
+						<input
+							type="range"
+							id="servo-slider"
+							min="0"
+							max="100"
+							step="1"
+							bind:value={servoPosition}
+							class="servo-slider"
+						/>
+						<span class="slider-value">{servoPosition}%</span>
+					</div>
+					<button onclick={setServoPosition} class="apply-button">Apply</button>
+				</div>
+
+				{#if servo.position?.lastUpdate}
+					<div class="last-update">
+						Last update: {servo.position.lastUpdate.toLocaleTimeString()}
+					</div>
+				{/if}
+			{:else}
+				<!-- Calibration Mode -->
+				<div class="calibration-mode">
+					<p class="calibration-hint">
+						Adjust duty cycle values to calibrate servo range. Use test buttons to verify positions.
+					</p>
+
+					<div class="calibration-section">
+						<h4>Minimum Position (0%)</h4>
+						<div class="duty-display">
+							<span class="duty-value">{servoMinDuty.toFixed(3)}ms</span>
+							<span class="duty-percentage">({dutyToPercentage(servoMinDuty).toFixed(2)}%)</span>
+						</div>
+						<div class="adjustment-buttons">
+							<button onclick={() => adjustServoDuty('min', -0.1)} class="adj-btn">-0.1ms</button>
+							<button onclick={() => adjustServoDuty('min', -0.05)} class="adj-btn">-0.05ms</button>
+							<button onclick={() => adjustServoDuty('min', -0.01)} class="adj-btn">-0.01ms</button>
+							<button onclick={() => adjustServoDuty('min', 0.01)} class="adj-btn">+0.01ms</button>
+							<button onclick={() => adjustServoDuty('min', 0.05)} class="adj-btn">+0.05ms</button>
+							<button onclick={() => adjustServoDuty('min', 0.1)} class="adj-btn">+0.1ms</button>
+						</div>
+						<button onclick={() => testServoPosition(0)} class="test-button">
+							Test Minimum Position
+						</button>
+					</div>
+
+					<div class="calibration-section">
+						<h4>Maximum Position (100%)</h4>
+						<div class="duty-display">
+							<span class="duty-value">{servoMaxDuty.toFixed(3)}ms</span>
+							<span class="duty-percentage">({dutyToPercentage(servoMaxDuty).toFixed(2)}%)</span>
+						</div>
+						<div class="adjustment-buttons">
+							<button onclick={() => adjustServoDuty('max', -0.1)} class="adj-btn">-0.1ms</button>
+							<button onclick={() => adjustServoDuty('max', -0.05)} class="adj-btn">-0.05ms</button>
+							<button onclick={() => adjustServoDuty('max', -0.01)} class="adj-btn">-0.01ms</button>
+							<button onclick={() => adjustServoDuty('max', 0.01)} class="adj-btn">+0.01ms</button>
+							<button onclick={() => adjustServoDuty('max', 0.05)} class="adj-btn">+0.05ms</button>
+							<button onclick={() => adjustServoDuty('max', 0.1)} class="adj-btn">+0.1ms</button>
+						</div>
+						<button onclick={() => testServoPosition(100)} class="test-button">
+							Test Maximum Position
+						</button>
+					</div>
+
+					<button onclick={swapServoRange} class="swap-button">
+						↔️ Swap Min/Max (Reverse Direction)
+					</button>
+
+					<div class="klipper-config">
+						<h4>Klipper Configuration</h4>
+						<pre><code># seconds \in (0, 0.02), duration of pulse when requested 0%
+vent_servo_pulse_width_min: {(servoMinDuty / 1000).toFixed(6)}
+# seconds \in (0, 0.02), duration of pulse when requesting 100%
+vent_servo_pulse_width_max: {(servoMaxDuty / 1000).toFixed(6)}</code></pre>
+					</div>
+
+					{#if servo.position?.value !== null && servo.position?.value !== undefined}
+						<div class="servo-status">
+							<span class="label">Current Position</span>
+							<span class="value">{servo.position.value.toFixed(1)}%</span>
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</div>
@@ -425,5 +574,167 @@
 
 	.apply-button:hover {
 		background: var(--button-hover, #0056b3);
+	}
+
+	.servo-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+	}
+
+	.servo-header h3 {
+		margin: 0;
+	}
+
+	.calibrate-button {
+		padding: 0.375rem 0.75rem;
+		background: var(--sensor-bg, #f8f8f8);
+		color: var(--text-color, #333);
+		border: 1px solid var(--border-color, #ccc);
+		border-radius: 4px;
+		cursor: pointer;
+		font-size: 0.875rem;
+		font-weight: 600;
+		transition: all 0.2s;
+	}
+
+	.calibrate-button:hover {
+		background: var(--hover-bg, #f0f0f0);
+	}
+
+	.calibration-mode {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+
+	.calibration-hint {
+		margin: 0;
+		padding: 0.75rem;
+		background: var(--sensor-bg, #f8f8f8);
+		border-left: 3px solid var(--button-bg, #007bff);
+		border-radius: 4px;
+		color: var(--text-muted, #666);
+		font-size: 0.9rem;
+	}
+
+	.calibration-section {
+		padding: 1rem;
+		background: var(--sensor-bg, #f8f8f8);
+		border-radius: 6px;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.calibration-section h4 {
+		margin: 0;
+		font-size: 1rem;
+		color: var(--text-color, #333);
+		font-weight: 600;
+	}
+
+	.duty-display {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+	}
+
+	.duty-value {
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: var(--text-color, #333);
+	}
+
+	.duty-percentage {
+		font-size: 0.9rem;
+		color: var(--text-muted, #666);
+	}
+
+	.adjustment-buttons {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.5rem;
+	}
+
+	.adj-btn {
+		padding: 0.5rem;
+		background: var(--bg-color, #fff);
+		color: var(--text-color, #333);
+		border: 1px solid var(--border-color, #ccc);
+		border-radius: 4px;
+		cursor: pointer;
+		font-size: 0.85rem;
+		font-weight: 600;
+		transition: all 0.2s;
+	}
+
+	.adj-btn:hover {
+		background: var(--hover-bg, #f0f0f0);
+		border-color: var(--button-bg, #007bff);
+	}
+
+	.test-button {
+		padding: 0.625rem 1rem;
+		background: var(--button-bg, #007bff);
+		color: white;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		font-size: 0.9rem;
+		font-weight: 600;
+		transition: background 0.2s;
+	}
+
+	.test-button:hover {
+		background: var(--button-hover, #0056b3);
+	}
+
+	.swap-button {
+		width: 100%;
+		padding: 0.75rem 1rem;
+		background: var(--sensor-bg, #f8f8f8);
+		color: var(--text-color, #333);
+		border: 1px solid var(--border-color, #ccc);
+		border-radius: 4px;
+		cursor: pointer;
+		font-size: 0.95rem;
+		font-weight: 600;
+		transition: all 0.2s;
+	}
+
+	.swap-button:hover {
+		background: var(--hover-bg, #f0f0f0);
+		border-color: var(--button-bg, #007bff);
+	}
+
+	.klipper-config {
+		padding: 1rem;
+		background: var(--sensor-bg, #f8f8f8);
+		border-radius: 6px;
+		border: 1px solid var(--border-color, #ccc);
+	}
+
+	.klipper-config h4 {
+		margin: 0 0 0.75rem 0;
+		font-size: 0.95rem;
+		color: var(--text-color, #333);
+		font-weight: 600;
+	}
+
+	.klipper-config pre {
+		margin: 0;
+		padding: 0.75rem;
+		background: var(--bg-color, #fff);
+		border-radius: 4px;
+		overflow-x: auto;
+	}
+
+	.klipper-config code {
+		font-family: 'Courier New', Courier, monospace;
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--text-color, #333);
 	}
 </style>
