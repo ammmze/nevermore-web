@@ -127,12 +127,24 @@
             servoMaxDuty = Math.max(0.1, Math.min(20, servoMaxDuty + delta));
         }
 
-        // Immediately apply the new range
+        // Apply the new range with two-step movement
         if (servo) {
             try {
                 const startPerc = dutyToPercentage(servoMinDuty);
                 const endPerc = dutyToPercentage(servoMaxDuty);
+
+                // First move to center position (50%)
+                await servo.setPosition(50);
+
+                // Wait 250ms for servo to actualize the movement
+                await new Promise((resolve) => setTimeout(resolve, 250));
+
+                // Apply the new range
                 await servo.setRange(startPerc, endPerc);
+
+                // Then move to the target position being calibrated
+                const targetPosition = target === 'min' ? 0 : 100;
+                await servo.setPosition(targetPosition);
             } catch (e) {
                 console.error('Error adjusting servo:', e);
             }
