@@ -19,15 +19,9 @@
 
 <div class="container" class:dark={themeStore.isDark}>
     <header>
-        <div class="header-content">
-            <div class="header-text">
-                <h1>Nevermore Controller</h1>
-                <p class="subtitle">
-                    Web Bluetooth interface for Nevermore air filtration controllers
-                </p>
-            </div>
-            <ThemeToggle />
-        </div>
+        <ThemeToggle />
+        <h1>Nevermore Controller</h1>
+        <p class="subtitle">Web Bluetooth interface for Nevermore air filtration controllers</p>
     </header>
 
     {#if !bluetoothManager.isSupported}
@@ -132,18 +126,8 @@
     }
 
     header {
+        position: relative;
         margin-bottom: 2rem;
-    }
-
-    .header-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 2rem;
-    }
-
-    .header-text {
-        flex: 1;
         text-align: center;
     }
 
@@ -155,7 +139,7 @@
 
     .subtitle {
         color: var(--text-muted);
-        margin-top: 0.5rem;
+        margin: 0.5rem 0 0 0;
     }
 
     .error-banner {

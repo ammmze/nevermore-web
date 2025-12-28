@@ -20,15 +20,19 @@
         <span class="duty-value">{dutyMs.toFixed(3)}ms</span>
         <span class="duty-percentage">({dutyPercentage.toFixed(2)}%)</span>
     </div>
-    <div class="adjustment-buttons">
-        <button onclick={() => onAdjust(-0.1)} class="adj-btn">-0.1ms</button>
-        <button onclick={() => onAdjust(-0.05)} class="adj-btn">-0.05ms</button>
-        <button onclick={() => onAdjust(-0.01)} class="adj-btn">-0.01ms</button>
-        <button onclick={() => onAdjust(0.01)} class="adj-btn">+0.01ms</button>
-        <button onclick={() => onAdjust(0.05)} class="adj-btn">+0.05ms</button>
-        <button onclick={() => onAdjust(0.1)} class="adj-btn">+0.1ms</button>
+    <div class="adjustment-controls">
+        <div class="minus-buttons">
+            <button onclick={() => onAdjust(-0.1)} class="adj-btn large">-0.1ms</button>
+            <button onclick={() => onAdjust(-0.05)} class="adj-btn medium">-0.05ms</button>
+            <button onclick={() => onAdjust(-0.01)} class="adj-btn small">-0.01ms</button>
+        </div>
+        <button onclick={onTest} class="test-button">Go</button>
+        <div class="plus-buttons">
+            <button onclick={() => onAdjust(0.01)} class="adj-btn small">+0.01ms</button>
+            <button onclick={() => onAdjust(0.05)} class="adj-btn medium">+0.05ms</button>
+            <button onclick={() => onAdjust(0.1)} class="adj-btn large">+0.1ms</button>
+        </div>
     </div>
-    <button onclick={onTest} class="test-button"> Test {label} </button>
 </div>
 
 <style>
@@ -65,14 +69,44 @@
         color: var(--text-muted, #666);
     }
 
-    .adjustment-buttons {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
+    .adjustment-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .minus-buttons,
+    .plus-buttons {
+        display: flex;
         gap: 0.5rem;
     }
 
+    @media (max-width: 640px) {
+        .adjustment-controls {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .minus-buttons,
+        .plus-buttons {
+            width: 100%;
+        }
+
+        .minus-buttons {
+            flex-direction: row-reverse;
+        }
+
+        .adj-btn {
+            flex: 1;
+        }
+
+        .test-button {
+            width: 100%;
+        }
+    }
+
     .adj-btn {
-        padding: 0.5rem;
+        padding: 0.5rem 0.75rem;
         background: var(--bg-color, #fff);
         color: var(--text-color, #333);
         border: 1px solid var(--border-color, #ccc);
@@ -83,13 +117,28 @@
         transition: all 0.2s;
     }
 
+    .adj-btn.small {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .adj-btn.medium {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .adj-btn.large {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
     .adj-btn:hover {
         background: var(--hover-bg, #f0f0f0);
         border-color: var(--button-bg, #007bff);
     }
 
     .test-button {
-        padding: 0.625rem 1rem;
+        padding: 0.625rem 1.25rem;
         background: var(--button-bg, #007bff);
         color: white;
         border: none;
@@ -98,6 +147,7 @@
         font-size: 0.9rem;
         font-weight: 600;
         transition: background 0.2s;
+        white-space: nowrap;
     }
 
     .test-button:hover {

@@ -22,8 +22,11 @@
 
 <style>
     .theme-toggle {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
         padding: 0.5rem;
-        background: transparent;
+        background: var(--bg-color);
         border: 1px solid var(--border-color);
         border-radius: 6px;
         cursor: pointer;
@@ -32,6 +35,7 @@
         justify-content: center;
         transition: all 0.2s;
         color: var(--text-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .theme-toggle:hover {
