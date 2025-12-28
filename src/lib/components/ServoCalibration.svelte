@@ -37,7 +37,7 @@
     </p>
 
     <CalibrationAdjuster
-        label="Minimum Position (0%)"
+        label="Closed (0%)"
         dutyMs={minDutyMs}
         dutyPercentage={dutyToPercentage(minDutyMs)}
         onAdjust={onAdjustMin}
@@ -45,14 +45,14 @@
     />
 
     <CalibrationAdjuster
-        label="Maximum Position (100%)"
+        label="Open (100%)"
         dutyMs={maxDutyMs}
         dutyPercentage={dutyToPercentage(maxDutyMs)}
         onAdjust={onAdjustMax}
         onTest={onTestMax}
     />
 
-    <button onclick={onSwap} class="swap-button"> ↔️ Swap Min/Max (Reverse Direction) </button>
+    <button onclick={onSwap} class="swap-button"> ↔️ Swap Closed/Open (Reverse Direction) </button>
 
     <KlipperConfigPreview {minDutyMs} {maxDutyMs} />
 
